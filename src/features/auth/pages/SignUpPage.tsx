@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AuthCard } from "@/features/auth/components/AuthCard";
@@ -11,18 +11,23 @@ import {
 } from "@/features/auth/schemas/authSchemas";
 import { authApi } from "@/features/auth/api/authApi";
 import { authSession } from "@/shared/session/authSession";
-import { ApiError } from "@/shared/api/httpClient";
-import { DEFAULT_COUNTRY } from "@/shared/config/countries";
-import { useAvailableCountries } from "@/shared/config/useAvailableCountries";
+import { ApiError, isAbortError } from "@/shared/api/httpClient";
+import {
+  SUPPORTED_COUNTRIES,
+  isRegionFieldRequired,
+  regionFieldLabel,
+  type SupportedCountry
+} from "@/shared/constants/supportedCountries";
 
 export function SignUpPage() {
   const navigate = useNavigate();
-  const countries = useAvailableCountries();
   const [formError, setFormError] = useState<string | null>(null);
+  const [countries, setCountries] = useState<SupportedCountry[]>(SUPPORTED_COUNTRIES);
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting }
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
@@ -30,12 +35,36 @@ export function SignUpPage() {
       companyName: "",
       timezone: "America/Toronto",
       industry: "",
-      country: DEFAULT_COUNTRY,
+      country: "CA",
+      addressLine1: "",
+      addressLine2: "",
+      city: "",
+      state: "",
+      postalCode: "",
       email: "",
       password: "",
       confirmPassword: ""
     }
   });
+
+  const selectedCountry = watch("country");
+
+  // The backend is the authority on which regions may sign up; fall back to the
+  // bundled list if it is unreachable (e.g. cold start).
+  useEffect(() => {
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        const data = await authApi.supportedCountries(controller.signal);
+        if (data.countries?.length) setCountries(data.countries);
+      } catch (error) {
+        if (!isAbortError(error)) {
+          // Keep the bundled fallback list.
+        }
+      }
+    })();
+    return () => controller.abort();
+  }, []);
 
   const onSubmit = async (values: SignUpFormValues) => {
     setFormError(null);
@@ -46,7 +75,12 @@ export function SignUpPage() {
         company_name: values.companyName,
         timezone: values.timezone,
         industry: values.industry,
-        country: values.country
+        country: values.country,
+        address_line1: values.addressLine1,
+        address_line2: values.addressLine2 || undefined,
+        city: values.city,
+        state: values.state || undefined,
+        postal_code: values.postalCode
       });
 
       if (response.session?.access_token) {
@@ -66,6 +100,14 @@ export function SignUpPage() {
       setFormError(message);
     }
   };
+
+  const groupedCountries = countries.reduce<Record<string, SupportedCountry[]>>(
+    (acc, country) => {
+      (acc[country.region] ??= []).push(country);
+      return acc;
+    },
+    {}
+  );
 
   return (
     <AuthCard
@@ -101,17 +143,73 @@ export function SignUpPage() {
           error={errors.industry?.message}
           {...register("industry")}
         />
+
         <div className="form-field">
           <label htmlFor="country">Country</label>
           <select id="country" className="form-field-select" {...register("country")}>
-            {countries.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.name} ({c.code})
-              </option>
+            {Object.entries(groupedCountries).map(([region, list]) => (
+              <optgroup key={region} label={region}>
+                {list.map((country) => (
+                  <option key={country.code} value={country.code}>
+                    {country.name}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
-          {errors.country ? <small className="field-error">{errors.country.message}</small> : null}
+          {errors.country ? (
+            <small className="field-error">{errors.country.message}</small>
+          ) : (
+            <small style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+              Available in North America and Europe, where we can verify a
+              business address.
+            </small>
+          )}
         </div>
+
+        <FormField
+          id="addressLine1"
+          label="Street Address"
+          placeholder="123 King Street West"
+          autoComplete="address-line1"
+          error={errors.addressLine1?.message}
+          {...register("addressLine1")}
+        />
+        <FormField
+          id="addressLine2"
+          label="Suite / Unit (optional)"
+          placeholder="Suite 400"
+          autoComplete="address-line2"
+          error={errors.addressLine2?.message}
+          {...register("addressLine2")}
+        />
+        <FormField
+          id="city"
+          label="City"
+          placeholder="Toronto"
+          autoComplete="address-level2"
+          error={errors.city?.message}
+          {...register("city")}
+        />
+        <FormField
+          id="state"
+          label={`${regionFieldLabel(selectedCountry)}${
+            isRegionFieldRequired(selectedCountry) ? "" : " (optional)"
+          }`}
+          placeholder={selectedCountry === "CA" ? "ON" : "NY"}
+          autoComplete="address-level1"
+          error={errors.state?.message}
+          {...register("state")}
+        />
+        <FormField
+          id="postalCode"
+          label="Postal / ZIP Code"
+          placeholder="M5H 1A1"
+          autoComplete="postal-code"
+          error={errors.postalCode?.message}
+          {...register("postalCode")}
+        />
+
         <FormField
           id="email"
           label="Work Email"
@@ -144,4 +242,3 @@ export function SignUpPage() {
     </AuthCard>
   );
 }
-

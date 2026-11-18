@@ -13,7 +13,16 @@ export const signUpSchema = z
     companyName: z.string().min(2, "Company name is required."),
     timezone: z.string().min(2, "Timezone is required."),
     industry: z.string().min(2, "Industry is required."),
-    country: z.string().length(2, "Select a country."),
+    // Business address — the server verifies this against postal data and
+    // rejects countries outside North America / Europe.
+    country: z
+      .string()
+      .length(2, "Select the country where your business is registered."),
+    addressLine1: z.string().min(3, "Street address is required."),
+    addressLine2: z.string().optional(),
+    city: z.string().min(2, "City is required."),
+    state: z.string().optional(),
+    postalCode: z.string().min(3, "Postal / ZIP code is required."),
     email: z.string().email("Enter a valid email address."),
     password: z
       .string()
@@ -23,7 +32,16 @@ export const signUpSchema = z
   .refine((values) => values.password === values.confirmPassword, {
     message: "Passwords do not match.",
     path: ["confirmPassword"]
-  });
+  })
+  .refine(
+    (values) =>
+      !["US", "PR", "CA", "MX"].includes(values.country) ||
+      Boolean(values.state && values.state.trim()),
+    {
+      message: "State / province is required for this country.",
+      path: ["state"]
+    }
+  );
 
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Enter a valid email address.")

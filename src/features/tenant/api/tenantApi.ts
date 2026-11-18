@@ -8,10 +8,20 @@ export type Tenant = {
   name: string;
   timezone: string;
   industry: string;
-  country?: string;
   default_email_recipients: string[];
   status: string;
   created_at: string;
+  // Business address. Stored in normalized form once verified.
+  country?: string;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  address_formatted?: string | null;
+  address_verified?: boolean;
+  address_verification_status?: string | null;
+  address_verified_at?: string | null;
 };
 
 export type TenantProfileResponse = {
@@ -23,8 +33,14 @@ export type TenantProfilePayload = {
   name?: string;
   timezone?: string;
   industry?: string;
-  country?: string;
   default_email_recipients?: string[];
+  // Sending any address field (or country) triggers server-side re-verification.
+  country?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
 };
 
 export type TenantProfileUpdateResponse = {

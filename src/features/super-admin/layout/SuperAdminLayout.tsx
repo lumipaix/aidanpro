@@ -24,6 +24,12 @@ const IconActivity = () => (
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
   </svg>
 );
+const IconMegaphone = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z" />
+    <path d="M16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14" />
+  </svg>
+);
 const IconShield = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -83,6 +89,12 @@ const NAV_GROUPS = [
     label: "Monitoring",
     links: [
       { to: "/super-admin/monitoring", end: false as const, label: "Monitoring", icon: <IconActivity /> }
+    ]
+  },
+  {
+    label: "Outreach",
+    links: [
+      { to: "/super-admin/campaigns", end: false as const, label: "Call Campaigns", icon: <IconMegaphone /> }
     ]
   },
   {

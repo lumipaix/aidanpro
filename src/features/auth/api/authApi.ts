@@ -11,7 +11,24 @@ export type SignUpRequest = {
   company_name: string;
   timezone: string;
   industry: string;
+  // Business address — verified server-side. Accounts are region-locked to
+  // North America and Europe.
   country: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state?: string;
+  postal_code: string;
+};
+
+export type SupportedCountry = {
+  code: string;
+  name: string;
+  region: string;
+};
+
+export type SupportedCountriesResponse = {
+  countries: SupportedCountry[];
 };
 
 export type AuthResponse = {
@@ -78,6 +95,9 @@ export const authApi = {
       method: "POST",
       body: payload
     });
+  },
+  supportedCountries(signal?: AbortSignal) {
+    return request<SupportedCountriesResponse>("/auth/supported-countries", { signal });
   },
   me() {
     return request<TenantProfileResponse>("/auth/me", { auth: true });

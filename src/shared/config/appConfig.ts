@@ -1,4 +1,5 @@
-const DEFAULT_API_BASE_URL = "http://127.0.0.1:5001";
+// Production backend; local dev overrides it with VITE_API_BASE_URL in .env.local.
+const DEFAULT_API_BASE_URL = "https://twilio-multi-tenant-voice-agent.onrender.com";
 
 export const appConfig = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_API_BASE_URL

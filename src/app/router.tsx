@@ -54,7 +54,7 @@ function DefaultRedirect() {
 export const appRouter = createBrowserRouter([
   {
     path: "/",
-    element: <DefaultRedirect />,
+    element: <DefaultRedirect />
   },
   {
     path: "/auth",
@@ -64,8 +64,8 @@ export const appRouter = createBrowserRouter([
       { path: "signup", element: <SignUpPage /> },
       { path: "forgot-password", element: <ForgotPasswordPage /> },
       { path: "verify-otp", element: <VerifyOtpPage /> },
-      { path: "reset-password", element: <ResetPasswordPage /> },
-    ],
+      { path: "reset-password", element: <ResetPasswordPage /> }
+    ]
   },
   {
     path: "/dashboard",
@@ -80,10 +80,10 @@ export const appRouter = createBrowserRouter([
           { path: "phone-numbers", element: <PhoneNumbersPage /> },
           { path: "integrations", element: <IntegrationsPage /> },
           { path: "calls", element: <CallsPage /> },
-          { path: "analytics", element: <AnalyticsPage /> },
-        ],
-      },
-    ],
+          { path: "analytics", element: <AnalyticsPage /> }
+        ]
+      }
+    ]
   },
   {
     path: "/super-admin",
@@ -97,14 +97,20 @@ export const appRouter = createBrowserRouter([
           { path: "tenants/:tenantId", element: <TenantDetailPage /> },
           { path: "twilio", element: <TwilioNumbersPage /> },
           { path: "monitoring", element: <MonitoringPage /> },
+          // Loaded on first visit so the campaign UI doesn't grow the main bundle.
+          { path: "campaigns", lazy: async () => ({ Component: (await import("@/features/super-admin/pages/CampaignsPage")).CampaignsPage }) },
+          { path: "campaigns/:campaignId", lazy: async () => ({ Component: (await import("@/features/super-admin/pages/CampaignDetailPage")).CampaignDetailPage }) },
           { path: "admins", element: <SuperAdminsPage /> },
-          { path: "spam-numbers", element: <SpamNumbersPage /> },
-        ],
-      },
-    ],
+          { path: "spam-numbers", element: <SpamNumbersPage /> }
+        ]
+      }
+    ]
   },
   {
     path: "*",
-    element: <DefaultRedirect />,
-  },
+    element: <DefaultRedirect />
+  }
 ]);
+
+
+
